@@ -18,7 +18,7 @@ async function run(){
     try{
         await client.connect();
         const itemCollection = client.db('distributeAgent').collection('item');
-
+        // create   
         app.get('/item', async(req, res) => {
             const query = {};
             const cursor = itemCollection.find(query);
@@ -26,7 +26,6 @@ async function run(){
             res.send(items);
         });
         
-        // create
         app.get('/item/:id', async(req, res) => {
             const id = req.params.id;
             const query = {_id: ObjectId(id)};
