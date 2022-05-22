@@ -1,7 +1,11 @@
 const express = require('express');
 const cors = require('cors');
+// Auth JWT
+// const axios = require('axios');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const { query } = require('express');
+const res = require('express/lib/response');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
@@ -18,6 +22,16 @@ async function run(){
     try{
         await client.connect();
         const itemCollection = client.db('distributeAgent').collection('item');
+
+        // Auth JWT
+        app.get('/login', async(req, res) => {
+            const user = req.body;
+            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                expiresIn: '1d'
+            });
+            res.send({accessToken});
+        })
+
         // create   
         app.get('/item', async(req, res) => {
             const query = {};
@@ -57,6 +71,10 @@ run().catch(console.dir);
 
 app.get('/', (req, res) => {
     res.send('Running Distribute Server');
+});
+
+app.get('/hero', (req, res)  => {
+    res.send('hero meets heroku')
 });
 
 app.listen(port, () => {
