@@ -73,7 +73,7 @@ app.get('/', (req, res) => {
     res.send('Running Distribute Server');
 });
 
-app.get('/hero', (req, res)  => {
+app.get('/hero', (req, res) => {
     res.send('hero meets heroku')
 });
 
