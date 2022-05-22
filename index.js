@@ -1,82 +1,118 @@
 const express = require('express');
-const cors = require('cors');
-// Auth JWT
-// const axios = require('axios');
-const jwt = require('jsonwebtoken');
+const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const { query } = require('express');
-const res = require('express/lib/response');
+const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
-const app = express();
-
-app.use(cors());
+// Middleware
 app.use(express.json());
+app.use(cors());
 
-
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6j8zx.mongodb.net/?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.9i21l.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
-async function run(){
-    try{
+async function run() {
+    try {
         await client.connect();
-        const itemCollection = client.db('distributeAgent').collection('item');
+        const productCollection = client.db('gymActive').collection('product');
+        const newProductCollection = client.db('gymActive').collection('newProduct');
 
-        // Auth JWT
-        app.get('/login', async(req, res) => {
+        // Authentication
+        app.post('/login', (req, res) => {
             const user = req.body;
             const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
                 expiresIn: '1d'
             });
-            res.send({accessToken});
+            res.send({ accessToken });
+        });
+
+        // Get product
+        app.get('/product', async (req, res) => {
+            const query = {};
+            const product = await productCollection.find(query).toArray();
+            res.send(product);
+        });
+
+        // Get product by ID
+        app.get('/product/:productId', async (req, res) => {
+            const id = req.params.productId;
+            const query = { _id: ObjectId(id) };
+            const product = await productCollection.findOne(query);
+            res.send(product);
+        });
+
+        // Post a new product
+        app.post('/product', async (req, res) => {
+            const newProduct = req.body;
+            const result = await inventoryCollection.insertOne(newInventory);
+            res.send(result);
+        });
+
+        // Delete a product
+        app.delete('/product/:productId', async (req, res) => {
+            const id = req.params.productId;
+            const query = { _id: ObjectId(id) };
+            const result = await productCollection.deleteOne(query);
+            res.send(result);
         })
 
-        // create   
-        app.get('/item', async(req, res) => {
-            const query = {};
-            const cursor = itemCollection.find(query);
-            const items = await cursor.toArray();
-            res.send(items);
-        });
-        
-        app.get('/item/:id', async(req, res) => {
-            const id = req.params.id;
-            const query = {_id: ObjectId(id)};
-            const item = await itemCollection.findOne(query);
-            res.send(item);
+        // New product Collection
+        app.get('/newitems', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const newProduct = await newProductCollection.find(query).toArray();
+            res.send(newProduct);
         });
 
-        // post
-        app.post('/item', async(req, res) => {
-            const newItem = req.body;
-            const result = await itemCollection.insertOne(newItem);
+        app.post('/newitems', async (req, res) => {
+            const newProduct = req.body;
+            const result = await newProductCollection.insertOne(newProduct);
             res.send(result);
         });
 
-        // delete
-        app.delete('/item/:id', async(req, res) => {
-            const id = req.params.id;
-            const query = {_id: ObjectId(id)};
-            const result = await itemCollection.deleteOne(query);
+        // Delete a New product Items
+        app.delete('/newitems/:newitemsId', async (req, res) => {
+            const id = req.params.newitemsId;
+            const query = { _id: ObjectId(id) };
+            const result = await newProductCollection.deleteOne(query);
             res.send(result);
-        });
-    }
-    finally{
+        })
 
+        // Get New product Items by ID
+        app.get('/newitems/:newitemsId', async (req, res) => {
+            const id = req.params.newitemsId;
+            const query = { _id: ObjectId(id) };
+            const result = await newProductCollection.findOne(query);
+            res.send(result);
+        })
+
+        // Get Quantity
+        app.put('/update-quantity/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedInventoryInfo = req.body;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    quantity: updatedInventoryInfo.quantity,
+                    sold: updatedInventoryInfo.sold
+                }
+            }
+            const result = await productCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
     }
+    finally { }
 }
-
 run().catch(console.dir);
 
 app.get('/', (req, res) => {
-    res.send('Running Distribute Server');
-});
+    res.send('Running Server');
+})
 
-app.get('/hero', (req, res) => {
-    res.send('hero meets heroku')
-});
 
 app.listen(port, () => {
-    console.log('Listening to port', port);
-});
+    console.log(`Server running on port ${port}`);
+})
