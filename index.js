@@ -30,7 +30,7 @@ async function run() {
         });
 
         // Get product
-        app.get('/products', async (req, res) => {
+        app.get('/product', async (req, res) => {
             const query = {};
             const product = await productCollection.find(query).toArray();
             res.send(product);
