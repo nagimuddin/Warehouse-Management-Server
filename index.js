@@ -1,14 +1,14 @@
 const express = require("express");
+const cors = require("cors");
 const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 
 // Middleware
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6j8zx.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
@@ -20,10 +20,9 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
+    console.log("Connected to MongoDB");
     const productCollection = client.db("distributeAgent").collection("item");
-    const newProductCollection = client
-      .db("distributeAgent")
-      .collection("newItem");
+    const newProductCollection = client.db("distributeAgent").collection("newItem");
 
     // Authentication
     app.post("/login", (req, res) => {
@@ -77,7 +76,6 @@ async function run() {
       const result = await newProductCollection.insertOne(newProduct);
       res.send(result);
     });
-
     // Delete a New product Items
     app.delete("/newitems/:newitemsId", async (req, res) => {
       const id = req.params.newitemsId;
@@ -106,11 +104,13 @@ async function run() {
           sold: updatedInventoryInfo.sold,
         },
       };
+
       const result = await productCollection.updateOne(
         filter,
         updatedDoc,
         options
       );
+
       res.send(result);
     });
   } finally {
@@ -119,7 +119,7 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.send("Running Server Testing");
+  res.send("Running Server");
 });
 
 app.listen(port, () => {
